@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Clock Widget</title>
+<style>
+  :root {
+    --bg-color: #5b1f00;
+    --text-color-light: #1f2733;
+    --text-color-dark: #e7ecf3;
+    --card-gap: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  .clock-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: var(--card-gap);
+  }
+
+  .card {
+    background-color: var(--bg-color);
+    border-radius: 18px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 220px;
+    height: 300px;
+    padding: 24px;
+  }
+
+  .value {
+    font-size: 130px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+
+  .label {
+    position: absolute;
+    bottom: 22px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* Card da hora: rótulo (AM/PM ou vazio) no canto inferior esquerdo */
+  #hourLabel {
+    left: 22px;
+  }
+
+  /* Card do dia: rótulo no canto inferior direito */
+  #dayLabel {
+    right: 22px;
+  }
+
+  /* Tema claro/escuro: cor do texto muda, o fundo do card (--bg-color) fica fixo */
+  body.theme-light .value,
+  body.theme-light .label {
+    color: var(--text-color-light);
+  }
+
+  body.theme-dark .value,
+  body.theme-dark .label {
+    color: var(--text-color-dark);
+  }
+</style>
+</head>
+<body>
+
+  <div class="clock-wrapper">
+    <div class="card">
+      <div class="value" id="hourValue">00</div>
+      <div class="label" id="hourLabel">AM</div>
+    </div>
+    <div class="card">
+      <div class="value" id="minuteValue">00</div>
+      <div class="label" id="dayLabel">MONDAY</div>
+    </div>
+  </div>
+
+<script>
+  // ---------- Leitura dos parâmetros da URL ----------
+  // Exemplo de uso:
+  // ?bg=2b3648&textLight=1f2733&textDark=e7ecf3&theme=auto&hourFormat=us&lang=en
+  const params = new URLSearchParams(window.location.search);
+
+  function withHash(hex) {
+    if (!hex) return null;
+    return hex.startsWith('#') ? hex : '#' + hex;
+  }
+
+  const bgColor      = withHash(params.get('bg'))         || '#5b1f00';
+  const textLight    = withHash(params.get('textLight'))  || '#1f2733';
+  const textDark     = withHash(params.get('textDark'))   || '#e7ecf3';
+  const themeParam   = (params.get('theme')    || 'auto').toLowerCase();   // light | dark | auto
+  const hourFormat   = (params.get('hourFormat') || 'us').toLowerCase();   // us (12h + AM/PM) | br (24h)
+  const lang         = (params.get('lang')       || 'en').toLowerCase();   // en | pt
+  const cardGap      = params.get('gap') || '10px';
+
+  document.documentElement.style.setProperty('--bg-color', bgColor);
+  document.documentElement.style.setProperty('--text-color-light', textLight);
+  document.documentElement.style.setProperty('--text-color-dark', textDark);
+  document.documentElement.style.setProperty('--card-gap', cardGap);
+
+  // ---------- Tema claro/escuro ----------
+  function applyTheme() {
+    let isDark;
+    if (themeParam === 'light') {
+      isDark = false;
+    } else if (themeParam === 'dark') {
+      isDark = true;
+    } else {
+      // auto: segue a preferência do sistema/navegador (aproxima o tema do Notion)
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    document.body.classList.toggle('theme-dark', isDark);
+    document.body.classList.toggle('theme-light', !isDark);
+  }
+  applyTheme();
+  if (themeParam === 'auto' && window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  }
+
+  // ---------- Nomes dos dias ----------
+  const daysEn = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const daysPt = ['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'];
+
+  // ---------- Atualização do relógio ----------
+  const hourValueEl  = document.getElementById('hourValue');
+  const hourLabelEl  = document.getElementById('hourLabel');
+  const minuteValueEl = document.getElementById('minuteValue');
+  const dayLabelEl   = document.getElementById('dayLabel');
+
+  function pad(n) {
+    return n.toString().padStart(2, '0');
+  }
+
+  function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const dayIndex = now.getDay();
+
+    if (hourFormat === 'br') {
+      // Padrão BR: 24h, sem AM/PM
+      hourValueEl.textContent = pad(hours);
+      hourLabelEl.textContent = ''; // sem simbolismo AM/PM
+      hourLabelEl.style.visibility = 'hidden';
+    } else {
+      // Padrão US: 12h com AM/PM
+      const meridiem = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+      hourValueEl.textContent = pad(displayHour);
+      hourLabelEl.textContent = meridiem;
+      hourLabelEl.style.visibility = 'visible';
+    }
+
+    minuteValueEl.textContent = pad(minutes);
+    dayLabelEl.textContent = lang === 'pt' ? daysPt[dayIndex] : daysEn[dayIndex];
+  }
+
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>

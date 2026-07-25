@@ -7,11 +7,12 @@
 <title>Flip Clock Widget</title>
 <style>
   :root {
-    --bg-color: #5b1f00;
+    --bg-color: #361d15;
     --text-color-light: #1f2733;
     --text-color-dark: #e7ecf3;
     --card-gap: 10px;
     --page-bg: transparent;
+    --scale: 1;
   }
 
   * {
@@ -41,18 +42,18 @@
 
   .card {
     background-color: var(--bg-color);
-    border-radius: 18px;
+    border-radius: calc(18px * var(--scale));
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 220px;
-    height: 300px;
-    padding: 24px;
+    width: calc(130px * var(--scale));
+    height: calc(175px * var(--scale));
+    padding: calc(14px * var(--scale));
   }
 
   .value {
-    font-size: 130px;
+    font-size: calc(72px * var(--scale));
     font-weight: 800;
     line-height: 1;
     letter-spacing: 1px;
@@ -60,8 +61,8 @@
 
   .label {
     position: absolute;
-    bottom: 22px;
-    font-size: 16px;
+    bottom: calc(14px * var(--scale));
+    font-size: calc(12px * var(--scale));
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -69,12 +70,12 @@
 
   /* Card da hora: rótulo (AM/PM ou vazio) no canto inferior esquerdo */
   #hourLabel {
-    left: 22px;
+    left: calc(14px * var(--scale));
   }
 
   /* Card do dia: rótulo no canto inferior direito */
   #dayLabel {
-    right: 22px;
+    right: calc(14px * var(--scale));
   }
 
   /* Tema claro/escuro: cor do texto muda, o fundo do card (--bg-color) fica fixo */
@@ -113,7 +114,7 @@
     return hex.startsWith('#') ? hex : '#' + hex;
   }
 
-  const bgColor      = withHash(params.get('bg'))         || '#5b1f00';
+  const bgColor      = withHash(params.get('bg'))         || '#361d15';
   const textLight    = withHash(params.get('textLight'))  || '#1f2733';
   const textDark     = withHash(params.get('textDark'))   || '#e7ecf3';
   const themeParam   = (params.get('theme')    || 'auto').toLowerCase();   // light | dark | auto
@@ -123,12 +124,14 @@
   // Cor de fundo da PÁGINA (área ao redor dos cards), separada da cor dos cards.
   // Ex: pageBg=191919 (cinza escuro padrão do Notion no tema dark)
   const pageBg       = withHash(params.get('pageBg'))     || 'transparent';
+  const scale        = parseFloat(params.get('scale'))    || 1;
 
   document.documentElement.style.setProperty('--bg-color', bgColor);
   document.documentElement.style.setProperty('--text-color-light', textLight);
   document.documentElement.style.setProperty('--text-color-dark', textDark);
   document.documentElement.style.setProperty('--card-gap', cardGap);
   document.documentElement.style.setProperty('--page-bg', pageBg);
+  document.documentElement.style.setProperty('--scale', scale);
 
   // ---------- Tema claro/escuro ----------
   function applyTheme() {

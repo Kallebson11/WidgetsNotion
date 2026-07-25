@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
 <title>Flip Clock Widget</title>
 <style>
   :root {
@@ -119,11 +120,15 @@
   const hourFormat   = (params.get('hourFormat') || 'us').toLowerCase();   // us (12h + AM/PM) | br (24h)
   const lang         = (params.get('lang')       || 'en').toLowerCase();   // en | pt
   const cardGap      = params.get('gap') || '10px';
+  // Cor de fundo da PÁGINA (área ao redor dos cards), separada da cor dos cards.
+  // Ex: pageBg=191919 (cinza escuro padrão do Notion no tema dark)
+  const pageBg       = withHash(params.get('pageBg'))     || 'transparent';
 
   document.documentElement.style.setProperty('--bg-color', bgColor);
   document.documentElement.style.setProperty('--text-color-light', textLight);
   document.documentElement.style.setProperty('--text-color-dark', textDark);
   document.documentElement.style.setProperty('--card-gap', cardGap);
+  document.documentElement.style.setProperty('--page-bg', pageBg);
 
   // ---------- Tema claro/escuro ----------
   function applyTheme() {
@@ -138,6 +143,7 @@
     }
     document.body.classList.toggle('theme-dark', isDark);
     document.body.classList.toggle('theme-light', !isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
   }
   applyTheme();
   if (themeParam === 'auto' && window.matchMedia) {
